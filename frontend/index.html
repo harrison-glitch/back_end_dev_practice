@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>♟️ Chess Game</h1>
+        </header>
+        
+        <div class="game-container">
+            <div class="game-info">
+                <div class="info-section">
+                    <h2>Game Status</h2>
+                    <p><strong>Turn:</strong> <span id="current-turn">White</span></p>
+                    <p><strong>Status:</strong> <span id="game-status">Active</span></p>
+                    <p><strong>Moves:</strong> <span id="move-count">0</span></p>
+                </div>
+                
+                <div class="controls">
+                    <button id="new-game-btn" class="btn btn-primary">New Game</button>
+                </div>
+                
+                <div class="info-section">
+                    <h2>Move History</h2>
+                    <div id="move-history" class="move-history"></div>
+                </div>
+            </div>
+            
+            <div class="board-container">
+                <div id="chess-board" class="chess-board"></div>
+                <div id="message" class="message"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
