@@ -26,6 +26,19 @@ let gameState = null;
 // Initialize game on page load
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('new-game-btn').addEventListener('click', createNewGame);
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            clearSelection();
+            showMessage('Selection cleared', 'info');
+        } else if (e.key === 'n' || e.key === 'N') {
+            if (confirm('Start a new game?')) {
+                createNewGame();
+            }
+        }
+    });
+    
     createNewGame();
 });
 
@@ -67,6 +80,11 @@ function renderBoard(board) {
             const piece = board[row][col];
             if (piece) {
                 square.textContent = PIECE_SYMBOLS[piece.color][piece.type];
+                // Add hoverable class to pieces of current turn
+                if (piece.color === gameState.current_turn) {
+                    square.classList.add('hoverable');
+                    square.style.cursor = 'pointer';
+                }
             }
             
             square.addEventListener('click', () => handleSquareClick(row, col));
@@ -79,20 +97,48 @@ function renderBoard(board) {
 function handleSquareClick(row, col) {
     if (!currentGameId) return;
     
+    // Don't allow moves if game is over
+    if (gameState.game_status === 'checkmate' || gameState.game_status === 'stalemate') {
+        showMessage('Game is over. Start a new game!', 'info');
+        return;
+    }
+    
     const clickedSquare = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
     
-    // If no square selected, select this one
-    if (!selectedSquare) {
-        const piece = gameState.board[row][col];
-        if (piece && piece.color === gameState.current_turn) {
-            selectedSquare = { row, col };
-            clickedSquare.classList.add('selected');
-            showMessage(`Selected ${piece.type}. Click a square to move.`, 'info');
-        }
-    } else {
-        // Try to move to clicked square
+    // If clicking on own piece, select it
+    const clickedPiece = gameState.board[row][col];
+    if (clickedPiece && clickedPiece.color === gameState.current_turn) {
+        clearSelection();
+        selectedSquare = { row, col };
+        clickedSquare.classList.add('selected');
+        highlightValidMoves(row, col);
+        showMessage(`Selected ${clickedPiece.type}. Click a highlighted square to move.`, 'info');
+        return;
+    }
+    
+    // If square is selected, try to move
+    if (selectedSquare) {
         makeMove(selectedSquare.row, selectedSquare.col, row, col);
         clearSelection();
+    }
+}
+
+// Highlight valid moves for selected piece
+function highlightValidMoves(row, col) {
+    const piece = gameState.board[row][col];
+    if (!piece) return;
+    
+    // Get all possible moves (simplified - shows all empty squares and captures)
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const targetPiece = gameState.board[r][c];
+            if (!targetPiece || targetPiece.color !== piece.color) {
+                const square = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                if (square) {
+                    square.classList.add('valid-move');
+                }
+            }
+        }
     }
 }
 
@@ -193,4 +239,26 @@ function showMessage(text, type = 'info') {
     const messageElement = document.getElementById('message');
     messageElement.textContent = text;
     messageElement.className = `message ${type}`;
+    
+    // Auto-clear success messages after 3 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            if (messageElement.textContent === text) {
+                messageElement.textContent = '';
+                messageElement.className = 'message';
+            }
+        }, 3000);
+    }
 }
+
+// Add visual feedback for piece hover
+document.addEventListener('DOMContentLoaded', () => {
+    const style = document.createElement('style');
+    style.textContent = `
+        .square.hoverable:hover {
+            transform: scale(1.05);
+            transition: transform 0.1s ease;
+        }
+    `;
+    document.head.appendChild(style);
+});
